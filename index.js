@@ -35,7 +35,7 @@ async function getLowestPriceFromNftCollection(collectionAddress) {
 
         return priceInEth;
     } catch (err) {
-        console.log(err);
+        console.log(clc.red(err));
     }
 }
 
@@ -76,7 +76,7 @@ async function getOwnersOfNftsFromGivenCollection(collectionAddress) {
         // list of all holders
         return allHolders;
     } catch (err) {
-        console.log(err);
+        console.log(clc.red(err));
     }
 }
 
@@ -85,6 +85,6 @@ async function placeOrderToEveryOwner(holders) {
     try {
         await Moralis.Plugins.opensea.createBuyOrder()
     } catch (err) {
-        console.log(err);
+        console.log(clc.red(err));
     }
 }
