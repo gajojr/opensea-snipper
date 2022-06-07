@@ -2,57 +2,43 @@ require('dotenv').config();
 const axios = require('axios');
 const clc = require('cli-color');
 const prompt = require('prompt-sync')();
-const Web3 = require('web3');
-const { OpenSeaPort, Network } = require('opensea-js');
+const { OpenSeaPort } = require('opensea-js');
+const { Network } = require('opensea-js/lib/types');
+const MnemonicWalletSubprovider = require('@0x/subproviders').MnemonicWalletSubprovider;
+const RPCSubprovider = require('web3-provider-engine/subproviders/rpc');
+const Web3ProviderEngine = require('web3-provider-engine');
 
-// const opensea = require("opensea-js");
-// const { WyvernSchemaName } = require('opensea-js/lib/types');
-// const OpenSeaPort = opensea.OpenSeaPort;
-// const Network = opensea.Network;
-// const MnemonicWalletSubprovider = require("@0x/subproviders")
-//   .MnemonicWalletSubprovider;
-// const RPCSubprovider = require("web3-provider-engine/subproviders/rpc");
-// const Web3ProviderEngine = require("web3-provider-engine");
+const mnemonic = prompt('Please enter your mnemonic:  ');
 
-// const BASE_DERIVATION_PATH = `44'/60'/0'/0`;
-// const mnemonicWalletSubprovider = new MnemonicWalletSubprovider({
-// 	mnemonic: MNEMONIC,
-// 	baseDerivationPath: BASE_DERIVATION_PATH,
-//   });
-//   const network =
-//   NETWORK === "mainnet" || NETWORK === "live" ? "mainnet" : "rinkeby";
-// const infuraRpcSubprovider = new RPCSubprovider({
-//   rpcUrl: isInfura
-//     ? "https://" + network + ".infura.io/v3/" + NODE_API_KEY
-//     : "https://eth-" + network + ".alchemyapi.io/v2/" + NODE_API_KEY,
-// });
+if (!mnemonic.length) {
+    console.log(clc.red(`You haven't entered your mnemonic, exiting the program...`));
+    return;
+}
 
-// const providerEngine = new Web3ProviderEngine();
-// providerEngine.addProvider(mnemonicWalletSubprovider);
-// providerEngine.addProvider(infuraRpcSubprovider);
-// providerEngine.start();
-
-// const seaport = new OpenSeaPort(
-//   providerEngine,
-//   {
-//     networkName:
-//       NETWORK === "mainnet" || NETWORK === "live"
-//         ? Network.Main
-//         : Network.Rinkeby,
-//     apiKey: API_KEY,
-//   },
-//   (arg) => console.log(arg)
-// );
-
-// This example provider won't let you make transactions, only read-only calls:
-const provider = new Web3.providers.HttpProvider('https://mainnet.infura.io');
-
-const seaport = new OpenSeaPort(provider, {
-    networkName: Network.Main,
-    apiKey: process.env.OPENSEA_API_KEY
+const BASE_DERIVATION_PATH = `44'/60'/0'/0`;
+const mnemonicWalletSubprovider = new MnemonicWalletSubprovider({
+    mnemonic,
+    baseDerivationPath: BASE_DERIVATION_PATH
 });
 
-const collectionSlug = prompt('Please enter the slug of nft collection:');
+const infuraRpcSubprovider = new RPCSubprovider({
+    rpcUrl: `https://network/infura.io/v3/${process.env.INFURA_ID}`
+});
+
+const providerEngine = new Web3ProviderEngine();
+providerEngine.addProvider(mnemonicWalletSubprovider);
+providerEngine.addProvider(infuraRpcSubprovider);
+providerEngine.start();
+
+const seaport = new OpenSeaPort(
+    providerEngine, {
+        networkName: Network.Main,
+        apiKey: process.env.OPENSEA_API_KEY,
+    },
+    (arg) => console.log(arg)
+);
+
+const collectionSlug = prompt('Please enter the slug of nft collection:  ');
 
 if (!collectionSlug.length) {
     console.log(clc.red(`You haven't entered collection slug, exiting the program...`));
@@ -65,9 +51,10 @@ let allHolders = [];
 let nextCursor = '';
 
 async function main() {
-    const floorPrice = await getFloorPriceBySlug(collectionSlug);
-    await getAllHoldersFromCollection(collectionSlug);
-
+    // const floorPrice = await getFloorPriceBySlug(collectionSlug);
+    // await getAllHoldersFromCollection(collectionSlug);
+    // console.log(allHolders.length);
+    await sendOfferToEveryHolder(1);
 }
 
 main();
@@ -123,19 +110,29 @@ async function getAllHoldersFromCollection(slug) {
 }
 
 async function sendOfferToEveryHolder(floorPrice) {
-    // Token ID and smart contract address for a non-fungible token:
-    const { tokenId, tokenAddress } = YOUR_ASSET;
-    // The offerer's wallet address:
-    const accountAddress = "0x1234...";
+    // // Token ID and smart contract address for a non-fungible token:
+    // const { tokenId, tokenAddress } = YOUR_ASSET;
+    // // The offerer's wallet address:
+    // const accountAddress = '0x1234...';
 
+    // const offer = await seaport.createBuyOrder({
+    //     asset: {
+    //         tokenId,
+    //         tokenAddress,
+    //         // schemaName WyvernSchemaName. If omitted, defaults to 'ERC721'. Other options include 'ERC20' and 'ERC1155'
+    //     },
+    //     accountAddress,
+    //     // Value of the offer, in units of the payment token (or wrapped ETH if none is specified):
+    //     startAmount: 1.2,
+    // });
     const offer = await seaport.createBuyOrder({
         asset: {
-            tokenId,
-            tokenAddress,
-            // schemaName WyvernSchemaName. If omitted, defaults to 'ERC721'. Other options include 'ERC20' and 'ERC1155'
+            tokenId: '1318479',
+            tokenAddress: '0x06012c8cf97bead5deae237070f9587f8e7a266d'
         },
-        accountAddress,
-        // Value of the offer, in units of the payment token (or wrapped ETH if none is specified):
-        startAmount: 1.2,
+        accountAddress: '0x1c79EdcaC6F24D7C3069339FFD09dA5DaF4E487f',
+        startAmount: 0.0001,
     });
+
+    console.log(offer);
 }
