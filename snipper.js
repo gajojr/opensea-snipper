@@ -110,11 +110,6 @@ async function getAllHoldersFromCollection(slug) {
 }
 
 async function sendOfferToEveryHolder(floorPrice) {
-    // // Token ID and smart contract address for a non-fungible token:
-    // const { tokenId, tokenAddress } = YOUR_ASSET;
-    // // The offerer's wallet address:
-    // const accountAddress = '0x1234...';
-
     // const offer = await seaport.createBuyOrder({
     //     asset: {
     //         tokenId,
@@ -125,14 +120,15 @@ async function sendOfferToEveryHolder(floorPrice) {
     //     // Value of the offer, in units of the payment token (or wrapped ETH if none is specified):
     //     startAmount: 1.2,
     // });
+
     const offer = await seaport.createBuyOrder({
         asset: {
-            tokenId: '1318479',
+            tokenId: '1381029',
             tokenAddress: '0x06012c8cf97bead5deae237070f9587f8e7a266d'
         },
         accountAddress: '0x1c79EdcaC6F24D7C3069339FFD09dA5DaF4E487f',
-        startAmount: 0.0001,
+        startAmount: 0.001
     });
 
-    console.log(offer);
+    console.log(offer)
 }
