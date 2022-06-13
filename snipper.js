@@ -22,7 +22,7 @@ const mnemonicWalletSubprovider = new MnemonicWalletSubprovider({
 });
 
 const infuraRpcSubprovider = new RPCSubprovider({
-    rpcUrl: `https://network/infura.io/v3/${process.env.INFURA_ID}`
+    rpcUrl: `https://mainnet.infura.io/v3/${process.env.INFURA_ID}`
 });
 
 const providerEngine = new Web3ProviderEngine();
@@ -51,10 +51,10 @@ let allHolders = [];
 let nextCursor = '';
 
 async function main() {
-    // const floorPrice = await getFloorPriceBySlug(collectionSlug);
-    // await getAllHoldersFromCollection(collectionSlug);
-    // console.log(allHolders.length);
-    await sendOfferToEveryHolder(1);
+    const floorPrice = await getFloorPriceBySlug(collectionSlug);
+    await getAllHoldersFromCollection(collectionSlug);
+    console.log(allHolders.length);
+    await sendOfferToEveryHolder(floorPrice);
 }
 
 main();
@@ -110,6 +110,7 @@ async function getAllHoldersFromCollection(slug) {
 }
 
 async function sendOfferToEveryHolder(floorPrice) {
+    console.log(floorPrice / 100 * 99);
     // const offer = await seaport.createBuyOrder({
     //     asset: {
     //         tokenId,
@@ -121,14 +122,14 @@ async function sendOfferToEveryHolder(floorPrice) {
     //     startAmount: 1.2,
     // });
 
-    const offer = await seaport.createBuyOrder({
-        asset: {
-            tokenId: '1381029',
-            tokenAddress: '0x06012c8cf97bead5deae237070f9587f8e7a266d'
-        },
-        accountAddress: '0x1c79EdcaC6F24D7C3069339FFD09dA5DaF4E487f',
-        startAmount: 0.001
-    });
+    // const offer = await seaport.createBuyOrder({
+    //     asset: {
+    //         tokenId: '6092',
+    //         tokenAddress: '0x93a796b1e846567fe3577af7b7bb89f71680173a'
+    //     },
+    //     accountAddress: '0x1c79EdcaC6F24D7C3069339FFD09dA5DaF4E487f',
+    //     startAmount: 0.001
+    // });
 
-    console.log(offer)
+    // console.log(offer)
 }
