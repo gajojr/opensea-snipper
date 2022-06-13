@@ -50,10 +50,14 @@ if (!collectionSlug.length) {
 let allHolders = [];
 let nextCursor = '';
 
+// keep track when looping through holders
+let currentHolderIdx = 0;
+
 async function main() {
     const floorPrice = await getFloorPriceBySlug(collectionSlug);
     await getAllHoldersFromCollection(collectionSlug);
-    console.log(allHolders.length);
+    console.log(`There are ${clc.yellow(allHolders.length)} holders`);
+    // await sendOfferToHolder(floorPrice);
     await sendOfferToEveryHolder(floorPrice);
 }
 
@@ -87,7 +91,7 @@ async function getAllHoldersFromCollection(slug) {
 
         let holdersList = {
             list: res.data.assets.map(asset => ({
-                contractAddress: asset.asset_contract.address,
+                tokenAddress: asset.asset_contract.address,
                 tokenId: asset.token_id,
                 ownerAddress: asset.owner.address
             })),
@@ -109,27 +113,45 @@ async function getAllHoldersFromCollection(slug) {
     }
 }
 
+async function sendOfferToHolder(floorPrice) {
+    try {
+        const asset = allHolders[currentHolderIdx];
+        if (asset.ownerAddress !== '0x1c79EdcaC6F24D7C3069339FFD09dA5DaF4E487f') {
+            const offer = await seaport.createBuyOrder({
+                asset: {
+                    tokenId: asset.tokenId,
+                    tokenAddress: asset.tokenAddress
+                },
+                accountAddress: '0x1c79EdcaC6F24D7C3069339FFD09dA5DaF4E487f',
+                startAmount: (floorPrice / 100) * 99
+            });
+
+            console.log(offer)
+        }
+
+        if (currentHolderIdx < allHolders.length) {
+            currentHolderIdx++;
+            await sendOfferToHolder(floorPrice);
+        }
+    } catch (err) {
+        console.log(clc.red(err));
+        // wait for 10s because of api rate limit
+        await new Promise(resolve => setTimeout(resolve, 10000));
+        await sendOfferToHolder(floorPrice);
+    }
+}
+
 async function sendOfferToEveryHolder(floorPrice) {
-    console.log(floorPrice / 100 * 99);
-    // const offer = await seaport.createBuyOrder({
-    //     asset: {
-    //         tokenId,
-    //         tokenAddress,
-    //         // schemaName WyvernSchemaName. If omitted, defaults to 'ERC721'. Other options include 'ERC20' and 'ERC1155'
-    //     },
-    //     accountAddress,
-    //     // Value of the offer, in units of the payment token (or wrapped ETH if none is specified):
-    //     startAmount: 1.2,
-    // });
+    try {
+        const offer = await seaport.createBundleBuyOrder({
+            assets: allHolders.filter(holder => holder.accountAddress !== '0x1c79EdcaC6F24D7C3069339FFD09dA5DaF4E487f'),
+            accountAddress: '0x1c79EdcaC6F24D7C3069339FFD09dA5DaF4E487f',
+            startAmount: (floorPrice / 100) * 99,
+            expirationTime: Math.round(Date.now() / 1000 + 60 * 60 * 24) // One day from now
+        });
 
-    // const offer = await seaport.createBuyOrder({
-    //     asset: {
-    //         tokenId: '6092',
-    //         tokenAddress: '0x93a796b1e846567fe3577af7b7bb89f71680173a'
-    //     },
-    //     accountAddress: '0x1c79EdcaC6F24D7C3069339FFD09dA5DaF4E487f',
-    //     startAmount: 0.001
-    // });
-
-    // console.log(offer)
+        console.log(offer);
+    } catch (err) {
+        console.log(clc.red(err));
+    }
 }
